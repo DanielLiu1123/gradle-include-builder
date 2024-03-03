@@ -8,7 +8,14 @@ buildscript {
     }
 }
 
-def yamlContent = new groovy.yaml.YamlSlurper().parse(file('dependencies.yaml'))
+def fileName = 'dependencies.yaml'
+
+def file = file("./$fileName")
+if (!file.exists()) {
+    log("$fileName is missing, skip.")
+}
+
+def yamlContent = new groovy.yaml.YamlSlurper().parse(file)
 
 yamlContent.projects.each { project ->
     def dir = getDir(project)
