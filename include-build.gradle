@@ -1,0 +1,66 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.codehaus.groovy:groovy-yaml:3.0.21"
+    }
+}
+
+def yamlContent = new groovy.yaml.YamlSlurper().parse(file('dependencies.yaml'))
+
+yamlContent.projects.each { project ->
+    def dir = getDir(project)
+    if (!dir) {
+        log("local.dir and remote.git.url is missing, skip.")
+        return
+    }
+
+    def projectDir = file(dir)
+    if (projectDir.exists()) {
+        log("include existing project: $dir")
+        includeBuild(dir)
+        return
+    }
+
+    def gitUrl = project.remote?.git?.url
+    if (!gitUrl) {
+        log("$dir is not exist, and remote.git.url is missing, skip.")
+        return
+    }
+
+    def command = "git clone ${gitBranchArg(project)} $gitUrl ${gitDirArg(project)}"
+    log("cloning project: $command")
+
+    exec(command)
+
+    if (projectDir.exists()) {
+        includeBuild(dir)
+    }
+
+}
+
+private static void exec(GString command) {
+    def process = command.execute()
+    process.consumeProcessOutput(System.out, System.err)
+    process.waitFor()
+}
+
+private static String getDir(project) {
+    return project.local?.dir ?: project.remote?.git?.url?.toString()?.split('/')?.last()?.split('\\.')?.first()
+}
+
+private static String gitBranchArg(project) {
+    def branch = project.remote?.git?.branch
+    return branch ? "--branch $branch" : ""
+}
+
+private static String gitDirArg(project) {
+    def dir = getDir(project)
+    return dir ? "$dir" : ""
+}
+
+private static void log(String message) {
+    println("[Include Builder] $message")
+}
