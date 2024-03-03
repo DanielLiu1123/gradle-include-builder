@@ -10,7 +10,7 @@ buildscript {
 
 def fileName = 'dependencies.yaml'
 
-def file = file(fileName)
+def file = new File(fileName)
 if (!file.exists()) {
     log("$fileName is missing, skip.")
 }
