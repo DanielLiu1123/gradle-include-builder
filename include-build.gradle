@@ -8,12 +8,12 @@ buildscript {
     }
 }
 
-def fileNames = ['dependencies.yaml', 'dependencies.yml']
+def fileNames = ['include-builder.yaml', 'include-builder.yml']
 
 def file = fileNames.stream().map { new File(it) }.filter { it.exists() }.findFirst().orElse(null)
 
 if (!file) {
-    log("dependencies.yaml is missing, skip.")
+    log("include-builder.yaml is missing, skip.")
     return
 }
 
