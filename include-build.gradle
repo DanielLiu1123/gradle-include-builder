@@ -8,11 +8,13 @@ buildscript {
     }
 }
 
-def fileName = 'dependencies.yaml'
+def fileNames = ['dependencies.yaml', 'dependencies.yml']
 
-def file = new File(fileName)
-if (!file.exists()) {
-    log("$fileName is missing, skip.")
+def file = fileNames.stream().map { new File(it) }.filter { it.exists() }.findFirst().orElse(null)
+
+if (!file) {
+    log("dependencies.yaml is missing, skip.")
+    return
 }
 
 def yamlContent = new groovy.yaml.YamlSlurper().parse(file)
@@ -24,7 +26,7 @@ yamlContent.projects.each { project ->
         return
     }
 
-    def projectDir = file(dir)
+    def projectDir = new File(dir)
     if (projectDir.exists()) {
         log("include existing project: $dir")
         includeBuild(dir)
