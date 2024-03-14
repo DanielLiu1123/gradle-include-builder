@@ -1,6 +1,8 @@
 projects:
   - local:
-      dir: ../httpexchange-spring-boot-starter
-    remote:
-      git:
-        url: https://github.com/DanielLiu1123/httpexchange-spring-boot-starter
+      dir: ../libs/lib-a
+#  - local:
+#      dir: ../../httpexchange-spring-boot-starter
+#    remote:
+#      git:
+#        url: https://github.com/DanielLiu1123/httpexchange-spring-boot-starter
