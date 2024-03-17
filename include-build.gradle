@@ -1,15 +1,26 @@
+import org.yaml.snakeyaml.LoaderOptions
+import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.Constructor
+
+import java.nio.file.Paths
+
+import static java.util.Optional.of
+import static java.util.Optional.ofNullable
+
+def configNames = ['include-builder.yaml', 'include-builder.yml']
+
 buildscript {
     repositories {
         mavenCentral()
     }
 
     dependencies {
-        classpath "org.codehaus.groovy:groovy-yaml:3.0.21"
+        classpath("org.yaml:snakeyaml:2.2")
     }
 }
 
 def log = { String message ->
-    println("[Include Builder] $message")
+    println("[Include Builder] $message (${rootProject.name})")
 }
 
 def exec = { String command ->
@@ -32,7 +43,7 @@ def getCurrentBranch = { String dir = null ->
 }
 
 def getAbsolutePath = { String dir ->
-    return dir.startsWith('/') ? dir : java.nio.file.Paths.get("$rootDir", dir).normalize().toString()
+    return dir.startsWith('/') ? dir : Paths.get("$rootDir", dir).normalize().toString()
 }
 
 def cloneProject = { String gitUrl, String dir, String branch = null ->
@@ -46,64 +57,50 @@ def cloneProject = { String gitUrl, String dir, String branch = null ->
     }
 }
 
-def yamlParser = new groovy.yaml.YamlSlurper();
+def getIncludeBuilderYaml  = { String absolutePath ->
+    def path = absolutePath ?: "${rootDir.getAbsolutePath()}"
+    return configNames
+            .stream()
+            .map { new File(path, it) }
+            .filter { it.exists() }
+            .findFirst()
+            .orElse(null)
+}
 
-def file = ['include-builder.yaml', 'include-builder.yml'].stream().map { new File(it) }.filter { it.exists() }.findFirst().orElse(null)
+def yamlParser = new Yaml(new Constructor(Cfg.class, new LoaderOptions()));
 
-if (!file) {
-    log("include-builder.yaml is missing, skip.")
+def file = getIncludeBuilderYaml()
+
+if (!file?.isFile()) {
+    log("include-builder.yaml is missing or not a file, skip")
     return
 }
 
-def isCI = java.util.Optional.ofNullable(System.getenv('CI')).map { Boolean.parseBoolean(it) || it == "1" }.orElse(false)
-
-def yamlContent = yamlParser.parse(file)
-def branchMappingDir = yamlContent['branch-mapping-dir'] ?: '.branch-mappings'
-def globalTrySameBranch = java.util.Optional.ofNullable(yamlContent['try-same-branch']).map { Boolean.parseBoolean(it.toString()) }.orElse(false)
+def cfg = yamlParser.load(file.text) as Cfg
+def branchMappingDir = cfg.branchMappingDir
+def globalTrySameBranch = cfg.trySameBranch
 def currentBranch = getCurrentBranch()
-def branchConfigFile = java.util.Optional.of(new File("$branchMappingDir/${currentBranch}.yaml")).filter { it.exists() }.orElseGet { new File("$branchMappingDir/${currentBranch}.yml") }
-def branchMappings = branchConfigFile.exists() ? yamlParser.parse(branchConfigFile) : [:]
+def branchConfigFile = of(new File("$branchMappingDir/${currentBranch}.yaml")).filter { it.exists() }.orElseGet { new File("$branchMappingDir/${currentBranch}.yml") }
+def projectToCfg = branchConfigFile.exists() ? yamlParser.parse(branchConfigFile) : [:] as Map<String, BranchMappingCfg>
 
-yamlContent['projects']?.each { project ->
-    def dir = project.local?.dir ?: project.remote?.git?.url?.toString()?.split('/')?.last()?.split('\\.')?.first()
+log("Configure [${rootProject.name}] project")
+
+cfg.projects.each { project ->
+    def dir = project.local?.dir ?: project.remote?.git?.url?.split('/')?.last()?.split('\\.')?.first()
     if (!dir) {
-        log("local.dir and remote.git.url is missing, skip.")
+        log("local.dir and remote.git.url is missing, skip")
         return
     }
 
-    def name = project['name'] ?: dir.split('/').last()
-    def branch = branchMappings[name]?.branch ?: project.remote?.git?.branch
+    def name = project.name ?: dir.split('/').last()
+    def branch = projectToCfg[name]?.branch ?: project.remote?.git?.branch
     def projectDir = new File(getAbsolutePath(dir))
-    def trySameBranch = java.util.Optional.ofNullable(project['try-same-branch']).map { Boolean.parseBoolean(it.toString()) }.orElse(globalTrySameBranch)
-
-    log("Configure project: $projectDir, name: $name, branch: $branch, trySameBranch: $trySameBranch, rootProjectBranch: $currentBranch")
+    def trySameBranch = ofNullable(project?.remote?.git?.trySameBranch).orElse(globalTrySameBranch)
 
     if (projectDir.exists()) {
         if (!projectDir.isDirectory()) {
-            log("$dir is not a directory, skip.")
+            log("$dir is not a directory, skip")
             return
-        }
-        if (isCI) {
-            def absolutePath = projectDir.getAbsolutePath()
-
-            exec "git -C $absolutePath fetch --all"
-            exec "git -C $absolutePath pull --rebase"
-            
-            if (branch) {
-                if (getCurrentBranch(absolutePath) != branch) {
-                    exec "git -C $absolutePath checkout $branch"
-                }
-            } else {
-                if (trySameBranch) {
-                    try {
-                        if (getCurrentBranch(absolutePath) != branch) {
-                            exec "git -C $absolutePath checkout $currentBranch"
-                        }
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-
         }
         log("include existing project: $dir")
         includeBuild(dir)
@@ -112,25 +109,21 @@ yamlContent['projects']?.each { project ->
 
     def gitUrl = project.remote?.git?.url
     if (!gitUrl) {
-        log("$dir is not exist, and remote.git.url is missing, skip.")
+        log("$dir is not exist, and remote.git.url is missing, skip")
         return
     }
 
     if (branch) {
         cloneProject(gitUrl, dir, branch)
-        log("Cloned $gitUrl with configured branch: $branch.")
     } else {
-        if (globalTrySameBranch) {
+        if (trySameBranch) {
             try {
                 cloneProject(gitUrl, dir, currentBranch)
-                log("Cloned $gitUrl with same branch: $currentBranch.")
             } catch (Exception ignored) {
                 cloneProject(gitUrl, dir)
-                log("Cloned $gitUrl with default branch.")
             }
         } else {
             cloneProject(gitUrl, dir)
-            log("Cloned $gitUrl with default branch.")
         }
     }
 
@@ -138,4 +131,34 @@ yamlContent['projects']?.each { project ->
         includeBuild(dir)
     }
 
+}
+
+class Cfg {
+    String branchMappingDir = '.branch-mappings'
+    Boolean trySameBranch = true
+    List<Proj> projects = []
+}
+
+class Proj {
+    String name
+    Local local = new Local()
+    Remote remote = new Remote()
+}
+
+class Local {
+    String dir = '.'
+}
+
+class Remote {
+    Git git = new Git()
+}
+
+class Git {
+    String url
+    String branch
+    Boolean trySameBranch
+}
+
+class BranchMappingCfg {
+    String branch
 }

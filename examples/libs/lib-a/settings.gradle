@@ -1,0 +1,3 @@
+rootProject.name = 'lib-a'
+
+apply from: "../../../include-build.gradle"
