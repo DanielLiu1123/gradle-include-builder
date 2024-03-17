@@ -37,9 +37,7 @@ def exec = { String command ->
 }
 
 def getCurrentBranch = { String dir = null ->
-    def p = "git ${dir ? "-C $dir" : ""} branch --show-current".execute()
-    p.waitFor()
-    return p.text.trim()
+    "git ${dir ? "-C $dir" : ""} branch --show-current".execute().text.trim()
 }
 
 def getAbsolutePath = { String dir ->
@@ -83,8 +81,6 @@ def currentBranch = getCurrentBranch()
 def branchConfigFile = of(new File("$branchMappingDir/${currentBranch}.yaml")).filter { it.exists() }.orElseGet { new File("$branchMappingDir/${currentBranch}.yml") }
 def projectToCfg = branchConfigFile.exists() ? yamlParser.parse(branchConfigFile) : [:] as Map<String, BranchMappingCfg>
 
-log("Configure [${rootProject.name}] project")
-
 cfg.projects.each { project ->
     def dir = project.local?.dir ?: project.remote?.git?.url?.split('/')?.last()?.split('\\.')?.first()
     if (!dir) {
@@ -102,7 +98,7 @@ cfg.projects.each { project ->
             log("$dir is not a directory, skip")
             return
         }
-        log("include existing project: $dir")
+        log("Include existing project: $dir")
         includeBuild(dir)
         return
     }
