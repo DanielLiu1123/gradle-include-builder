@@ -1,5 +1,5 @@
 branchMappingDir: .branch-mappings
-trySameBranch: false
+trySameBranch: true
 projects:
   - local:
       dir: ../httpexchange-spring-boot-starter

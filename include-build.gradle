@@ -24,7 +24,7 @@ def log = { String message ->
 }
 
 def exec = { String command ->
-    println "execute: $command"
+    log("Execute: $command")
     def process = ["bash", "-c", "$command"].execute()
     process.consumeProcessOutput(System.out, System.err)
     def result = process.waitFor()
@@ -37,7 +37,11 @@ def exec = { String command ->
 }
 
 def getCurrentBranch = { String dir = null ->
-    "git ${dir ? "-C $dir" : ""} branch --show-current".execute().text.trim()
+    try {
+        return "git ${dir ? "-C $dir " : ""}branch --show-current".execute().text.trim()
+    } catch (ignored) {
+        return "NOT_GIT_REPOSITORY"
+    }
 }
 
 def getAbsolutePath = { String dir ->
@@ -49,10 +53,7 @@ def cloneProject = { String gitUrl, String dir, String branch = null ->
     if (new File(path).exists()) {
         return
     }
-    exec "git clone $gitUrl ${path}"
-    if (branch) {
-        exec "git -C ${path} checkout $branch"
-    }
+    exec "git clone ${branch? "-b $branch " : ""}$gitUrl ${path}"
 }
 
 def getIncludeBuilderYaml  = { String absolutePath ->
@@ -131,7 +132,7 @@ cfg.projects.each { project ->
 
 class Cfg {
     String branchMappingDir = '.branch-mappings'
-    Boolean trySameBranch = true
+    Boolean trySameBranch = false
     List<Proj> projects = []
 }
 
