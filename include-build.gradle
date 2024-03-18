@@ -66,6 +66,10 @@ def getIncludeBuilderYaml  = { String absolutePath ->
             .orElse(null)
 }
 
+def getProjectBuildPath = { String absolutePath, Proj project ->
+    return Paths.get(absolutePath, project.remote?.git?.subDir ?: '.').normalize().toString()
+}
+
 def yamlParser = new Yaml(new Constructor(Cfg.class, new LoaderOptions()));
 
 def file = getIncludeBuilderYaml()
@@ -91,7 +95,8 @@ cfg.projects.each { project ->
 
     def name = project.name ?: dir.split('/').last()
     def branch = projectToCfg[name]?.branch ?: project.remote?.git?.branch
-    def projectDir = new File(getAbsolutePath(dir))
+    def absolutePath = getAbsolutePath(dir)
+    def projectDir = new File(absolutePath)
     def trySameBranch = ofNullable(project?.remote?.git?.trySameBranch).orElse(globalTrySameBranch)
 
     if (projectDir.exists()) {
@@ -100,7 +105,7 @@ cfg.projects.each { project ->
             return
         }
         log("Include existing project: $dir")
-        includeBuild(dir)
+        includeBuild(getProjectBuildPath(absolutePath, project))
         return
     }
 
@@ -125,7 +130,7 @@ cfg.projects.each { project ->
     }
 
     if (projectDir.exists()) {
-        includeBuild(dir)
+        includeBuild(getProjectBuildPath(absolutePath, project))
     }
 
 }
@@ -153,6 +158,7 @@ class Remote {
 class Git {
     String url
     String branch
+    String subDir = '.'
     Boolean trySameBranch
 }
 
