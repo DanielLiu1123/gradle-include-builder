@@ -1,0 +1,170 @@
+import org.yaml.snakeyaml.LoaderOptions
+import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.Constructor
+
+import java.nio.file.Paths
+
+import static java.util.Optional.of
+import static java.util.Optional.ofNullable
+
+def configNames = ['include-builder.yaml', 'include-builder.yml']
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("org.yaml:snakeyaml:2.2")
+    }
+}
+
+def log = { String message ->
+    println("[Include Builder] $message (${rootProject.name})")
+}
+
+def exec = { String command ->
+    log("Execute: $command")
+    def process = ["bash", "-c", "$command"].execute()
+    process.consumeProcessOutput(System.out, System.err)
+    def result = process.waitFor()
+    if (result != 0) {
+        throw new RuntimeException("""
+                Execute failed with exit code $result
+                command: $command
+                """)
+    }
+}
+
+def getCurrentBranch = { String dir = null ->
+    try {
+        return "git ${dir ? "-C $dir " : ""}branch --show-current".execute().text.trim()
+    } catch (ignored) {
+        return "NOT_GIT_REPOSITORY"
+    }
+}
+
+def getAbsolutePath = { String dir ->
+    return dir.startsWith('/') ? dir : Paths.get("$rootDir", dir).normalize().toString()
+}
+
+def cloneProject = { String gitUrl, String dir, String branch = null ->
+    def path = getAbsolutePath(dir)
+    if (new File(path).exists()) {
+        return
+    }
+    exec "git clone ${branch? "-b $branch " : ""}$gitUrl ${path}"
+}
+
+def getIncludeBuilderYaml  = { String absolutePath ->
+    def path = absolutePath ?: "${rootDir.getAbsolutePath()}"
+    return configNames
+            .stream()
+            .map { new File(path, it) }
+            .filter { it.exists() }
+            .findFirst()
+            .orElse(null)
+}
+
+def getLocalDir = { Proj project ->
+    return project.local?.dir ?: project.remote?.git?.url?.split('/')?.last()?.split('\\.')?.first()
+}
+
+def getProjectBuildPath = { Proj project ->
+    return Paths.get(getLocalDir(project), project.remote?.git?.subDir ?: '.').normalize().toString()
+}
+
+def yamlParser = new Yaml(new Constructor(Cfg.class, new LoaderOptions()));
+
+def file = getIncludeBuilderYaml()
+
+if (!file?.isFile()) {
+    log("include-builder.yaml is missing or not a file, skip")
+    return
+}
+
+def cfg = yamlParser.load(file.text) as Cfg
+def branchMappingDir = cfg.branchMappingDir
+def globalTrySameBranch = cfg.trySameBranch
+def currentBranch = getCurrentBranch()
+def branchConfigFile = of(new File("$branchMappingDir/${currentBranch}.yaml")).filter { it.exists() }.orElseGet { new File("$branchMappingDir/${currentBranch}.yml") }
+def projectToCfg = branchConfigFile.exists() ? yamlParser.parse(branchConfigFile) : [:] as Map<String, BranchMappingCfg>
+
+cfg.projects.each { project ->
+    def dir = getLocalDir(project)
+    if (!dir) {
+        log("local.dir and remote.git.url is missing, skip")
+        return
+    }
+
+    def name = project.id ?: dir.split('/').last()
+    def branch = projectToCfg[name]?.branch ?: project.remote?.git?.branch
+    def projectDir = new File(getAbsolutePath(dir))
+    def trySameBranch = ofNullable(project?.remote?.git?.trySameBranch).orElse(globalTrySameBranch)
+
+    if (projectDir.exists()) {
+        if (!projectDir.isDirectory()) {
+            log("$dir is not a directory, skip")
+            return
+        }
+        log("Include existing project: $dir")
+        includeBuild(getProjectBuildPath(project))
+        return
+    }
+
+    def gitUrl = project.remote?.git?.url
+    if (!gitUrl) {
+        log("$dir is not exist, and remote.git.url is missing, skip")
+        return
+    }
+
+    if (branch) {
+        cloneProject(gitUrl, dir, branch)
+    } else {
+        if (trySameBranch) {
+            try {
+                cloneProject(gitUrl, dir, currentBranch)
+            } catch (Exception ignored) {
+                cloneProject(gitUrl, dir)
+            }
+        } else {
+            cloneProject(gitUrl, dir)
+        }
+    }
+
+    if (projectDir.exists()) {
+        includeBuild(getProjectBuildPath(project))
+    }
+
+}
+
+class Cfg {
+    String branchMappingDir = '.branch-mappings'
+    Boolean trySameBranch = false
+    List<Proj> projects = []
+}
+
+class Proj {
+    String name
+    Local local = new Local()
+    Remote remote = new Remote()
+}
+
+class Local {
+    String dir = '.'
+}
+
+class Remote {
+    Git git = new Git()
+}
+
+class Git {
+    String url
+    String branch
+    String subDir = '.'
+    Boolean trySameBranch
+}
+
+class BranchMappingCfg {
+    String branch
+}
