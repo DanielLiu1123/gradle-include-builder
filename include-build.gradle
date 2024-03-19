@@ -96,44 +96,46 @@ def projectToCfg = branchConfigFile.exists() ? bmYamlParser.load(branchConfigFil
 cfg.projects.each { project ->
 
     // dir
-    def dirPath = project.dir?.path
-    if (dirPath) {
-        def targetFile = Paths.get(getAbsolutePath(dirPath), project.dir.buildPath).normalize().toFile()
+    def dirCfg = project.dir
+    if (dirCfg) {
+        def dirPath = getAbsolutePath(dirCfg.path)
+        def targetFile = Paths.get(getAbsolutePath(dirPath), dirCfg.buildPath).normalize().toFile()
         if (!targetFile.exists()) {
             log("$dirPath is not exist, skip")
         } else if (!targetFile.isDirectory()) {
             log("$dirPath is not a directory, skip")
         } else {
             includeBuild(targetFile.getAbsolutePath())
-            return
         }
+        return
     }
 
     // jar
-    def jar = project.jar
-    if (jar) {
-        def jarPath = getAbsolutePath(jar.path)
+    def jarCfg = project.jar
+    if (jarCfg) {
+        def jarPath = getAbsolutePath(jarCfg.path)
         def jarFile = new File(jarPath)
-        switch (jar.downloadPolicy) {
+        switch (jarCfg.downloadPolicy) {
             case DownloadPolicy.ALWAYS:
-                if (jar.url) {
+                if (jarCfg.url) {
                     jarFile.exists() && jarFile.delete()
-                    exec "curl -L -o $jarPath ${jar.url}"
+                    exec "curl -L --create-dirs -o $jarPath ${jarCfg.url}"
                 }
-                new File(jarPath).exists() && includeBuild(jarPath)
+                jarFile.exists() && includeBuild(jarFile.getParent())
                 break
             case DownloadPolicy.IF_NOT_PRESENT:
                 if (!jarFile.exists()) {
-                    jar.url && exec "curl -L -o $jarPath ${jar.url}"
+                    jarCfg.url && exec("curl -L --create-dirs -o $jarPath ${jarCfg.url}")
                 }
-                jarFile.exists() && includeBuild(jarPath)
+                jarFile.exists() && includeBuild(jarFile.getParent())
                 break
             case DownloadPolicy.NEVER:
-                jarFile.exists() && includeBuild(jarPath)
+                jarFile.exists() && includeBuild(jarFile.getParent())
                 break
             default:
                 break
         }
+        return
     }
 
 
@@ -187,7 +189,7 @@ cfg.projects.each { project ->
 }
 
 class Cfg {
-    String branchMappingDir = '.configuredBranch-mappings'
+    String branchMappingDir = '.branch-mappings'
     Boolean trySameBranch = false
     List<Proj> projects = []
 }

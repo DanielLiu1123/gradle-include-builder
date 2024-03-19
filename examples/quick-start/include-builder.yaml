@@ -1,4 +1,4 @@
-trySameBranch: true
 projects:
-  - local:
-      dir: ../libs/lib-a
+  - dir:
+      path: ../libs/lib-a
+      buildPath: .

@@ -1,19 +1,19 @@
-branch-mapping-dir: .branch-mappings
-try-same-branch: true
+branchMappingDir: .branch-mappings
+trySameBranch: true
 projects:
   - id: httpexchange-spring-boot-starter
     git:
       url: https://github.com/DanielLiu1123/httpexchange-spring-boot-starter
       path: ../httpexchange-spring-boot-starter # aka. download dir
-      build-path: .
+      buildPath: .
       branch: main
       commit:
       tag:
-      extra-args:
+      extraArgs:
     dir:
       path: ../httpexchange-spring-boot-starter
-      build-path: .
+      buildPath: .
     jar:
       url: https://repo1.maven.org/maven2/io/github/danielliu1123/httpexchange-spring-boot-autoconfigure/3.2.3/httpexchange-spring-boot-autoconfigure-3.2.3.jar
       path: libs/httpexchange-spring-boot-autoconfigure.jar
-      download-policy: always # always, if-not-present, never
+      downloadPolicy: always # always, if-not-present, never

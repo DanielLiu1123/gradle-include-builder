@@ -1,4 +1,4 @@
-package quickstart;
+package jar;
 
 import io.github.danielliu1123.httpexchange.EnableExchangeClients;
 import org.springframework.boot.SpringApplication;

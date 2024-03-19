@@ -1,0 +1,3 @@
+rootProject.name = 'jar'
+
+apply from: "../../include-build.gradle"
