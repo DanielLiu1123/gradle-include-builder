@@ -14,7 +14,7 @@ dependencyManagement {
 }
 
 dependencies {
-    api(files("libs/gson.jar"))
+    api("examples:jar")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

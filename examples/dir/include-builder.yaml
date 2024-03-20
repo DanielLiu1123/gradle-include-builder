@@ -1,4 +1,4 @@
 projects:
   - dir:
-      path: ../libs/lib-a
+      path: ../jar
       buildPath: .
