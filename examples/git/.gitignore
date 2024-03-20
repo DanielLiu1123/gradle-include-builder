@@ -39,4 +39,4 @@ build
 
 **/.gradle
 
-libs/
+third-party/

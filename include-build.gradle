@@ -43,8 +43,8 @@ def getAbsolutePath = { String dir ->
     return dir.startsWith('/') ? dir : Paths.get(rootDir.getAbsolutePath(), dir).normalize().toString()
 }
 
-def getIncludeBuilderYaml = { String absolutePath ->
-    def path = absolutePath ?: rootDir.getAbsolutePath()
+def getIncludeBuilderYaml = {
+    def path = rootDir.getAbsolutePath()
     return configNames
             .stream()
             .map { new File(path, it) }
@@ -75,6 +75,17 @@ def build = { String path ->
     includeBuild(absolutePath)
 }
 
+def getMapping = { ProjectMappings projectMappings, String id ->
+    if (!projectMappings?.mappings) {
+        return null
+    }
+    return projectMappings.mappings
+            .stream()
+            .filter { it.id == id }
+            .findFirst()
+            .orElse(null)
+}
+
 def file = getIncludeBuilderYaml()
 if (!file?.isFile()) {
     log("include-builder.yaml is missing or not a file, skip")
@@ -85,13 +96,17 @@ if (!file?.isFile()) {
 def ibYamlParser = new Yaml(new Constructor(Cfg.class, new LoaderOptions()))
 
 // branch mapping parser
-def bmYamlParser = new Yaml()
+def bmYamlParser = new Yaml(new Constructor(ProjectMappings.class, new LoaderOptions()))
 
 def cfg = ibYamlParser.load(file.text) as Cfg
+if (!cfg) {
+    log("${file.name} is empty, skip")
+    return
+}
 def branchMappingDir = cfg.branchMappingDir
 def currentBranch = getCurrentBranch()
 def branchConfigFile = of(new File("$branchMappingDir/${currentBranch}.yaml")).filter { it.exists() }.orElseGet { new File("$branchMappingDir/${currentBranch}.yml") }
-def projectToCfg = branchConfigFile.exists() ? bmYamlParser.load(branchConfigFile.text) : [:] as Map<String, BranchMappingCfg>
+def projectMappings = branchConfigFile.exists() ? bmYamlParser.load(branchConfigFile.text) : new ProjectMappings()
 
 cfg.projects.each { project ->
 
@@ -156,7 +171,7 @@ cfg.projects.each { project ->
     }
 
     def id = project.id ?: relativePath.split('/').last()
-    def configuredBranch = projectToCfg[id]?.branch ?: project.git?.branch
+    def configuredBranch = getMapping(projectMappings, id)?.branch ?: project.git?.branch
     def trySameBranch = ofNullable(project?.git?.trySameBranch).orElse(cfg.trySameBranch)
     def extraArgs = project.git?.extraArgs
 
@@ -212,10 +227,15 @@ class Jar {
     DownloadPolicy downloadPolicy = DownloadPolicy.IF_NOT_PRESENT
 }
 
-class BranchMappingCfg {
-    String branch
-}
-
 enum DownloadPolicy {
     ALWAYS, IF_NOT_PRESENT, NEVER
+}
+
+class ProjectMappings {
+    List<Mapping> mappings = []
+}
+
+class Mapping {
+    String id
+    String branch
 }

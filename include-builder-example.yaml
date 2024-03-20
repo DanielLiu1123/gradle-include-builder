@@ -7,9 +7,7 @@ projects:
       path: ../httpexchange-spring-boot-starter # aka. download dir
       buildPath: .
       branch: main
-      commit:
-      tag:
-      extraArgs:
+      extraArgs: --depth 1 --single-branch
     dir:
       path: ../httpexchange-spring-boot-starter
       buildPath: .
