@@ -46,11 +46,11 @@ def getCurrentBranch = { String dir = null ->
 }
 
 def getAbsolutePath = { String dir ->
-    return dir.startsWith('/') ? dir : Paths.get("$rootDir", dir).normalize().toString()
+    return dir.startsWith('/') ? dir : Paths.get(rootDir.getAbsolutePath(), dir).normalize().toString()
 }
 
 def getIncludeBuilderYaml = { String absolutePath ->
-    def path = absolutePath ?: "${rootDir.getAbsolutePath()}"
+    def path = absolutePath ?: rootDir.getAbsolutePath()
     return configNames
             .stream()
             .map { new File(path, it) }
@@ -64,7 +64,7 @@ def getGitPath = { Proj project ->
 }
 
 def getGitBuildPath = { Proj project ->
-    return Paths.get(getGitPath(project), project.git?.buildPath ?: '.').normalize().toString()
+    return Paths.get(getAbsolutePath(getGitPath(project)), project.git?.buildPath ?: '.').normalize().toString()
 }
 
 def cloneProject = { String gitUrl, String dir, String branch = null, String extraArgs = null ->
@@ -113,19 +113,18 @@ cfg.projects.each { project ->
     // jar
     def jarCfg = project.jar
     if (jarCfg) {
-        def jarPath = getAbsolutePath(jarCfg.path)
-        def jarFile = new File(jarPath)
+        def jarFile = new File(getAbsolutePath(jarCfg.path))
         switch (jarCfg.downloadPolicy) {
             case DownloadPolicy.ALWAYS:
                 if (jarCfg.url) {
                     jarFile.exists() && jarFile.delete()
-                    exec "curl -L --create-dirs -o $jarPath ${jarCfg.url}"
+                    exec "curl -L --create-dirs -o ${jarFile.getAbsolutePath()} ${jarCfg.url}"
                 }
                 jarFile.exists() && includeBuild(jarFile.getParent())
                 break
             case DownloadPolicy.IF_NOT_PRESENT:
                 if (!jarFile.exists()) {
-                    jarCfg.url && exec("curl -L --create-dirs -o $jarPath ${jarCfg.url}")
+                    jarCfg.url && exec("curl -L --create-dirs -o ${jarFile.getAbsolutePath()} ${jarCfg.url}")
                 }
                 jarFile.exists() && includeBuild(jarFile.getParent())
                 break
@@ -138,47 +137,46 @@ cfg.projects.each { project ->
         return
     }
 
-
     // git
-    def dir = getGitPath(project)
-    if (!dir) {
+    def relativePath = getGitPath(project)
+    if (!relativePath) {
         log("git.path and git.url is missing, skip")
         return
     }
 
-    def id = project.id ?: dir.split('/').last()
+    def id = project.id ?: relativePath.split('/').last()
     def configuredBranch = projectToCfg[id]?.branch ?: project.git?.branch
-    def projectDir = new File(getAbsolutePath(dir))
+    def projectDir = new File(getAbsolutePath(relativePath))
     def trySameBranch = ofNullable(project?.git?.trySameBranch).orElse(cfg.trySameBranch)
 
     if (projectDir.exists()) {
         if (!projectDir.isDirectory()) {
-            log("$dir is not a directory, skip")
+            log("$relativePath is not a directory, skip")
             return
         }
-        log("Include existing project: $dir")
+        log("Include existing project: $relativePath")
         includeBuild(getGitBuildPath(project))
         return
     }
 
     def gitUrl = project.git?.url
     if (!gitUrl) {
-        log("$dir is not exist, and git.url is missing, skip")
+        log("$relativePath is not exist, and git.url is missing, skip")
         return
     }
 
     def extraArgs = project.git?.extraArgs
     if (configuredBranch) {
-        cloneProject(gitUrl, dir, configuredBranch, extraArgs)
+        cloneProject(gitUrl, relativePath, configuredBranch, extraArgs)
     } else {
         if (trySameBranch && currentBranch != NOT_GIT_REPOSITORY) {
             try {
-                cloneProject(gitUrl, dir, currentBranch, extraArgs)
+                cloneProject(gitUrl, relativePath, currentBranch, extraArgs)
             } catch (Exception ignored) {
-                cloneProject(gitUrl, dir, null, extraArgs)
+                cloneProject(gitUrl, relativePath, null, extraArgs)
             }
         } else {
-            cloneProject(gitUrl, dir, null, extraArgs)
+            cloneProject(gitUrl, relativePath, null, extraArgs)
         }
     }
 
