@@ -1,11 +1,24 @@
 plugins {
     id 'java'
+    id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
 }
 
 repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
+    }
+}
+
 dependencies {
     implementation(files("libs/gson.jar"))
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+}
+
+test {
+    useJUnitPlatform()
 }

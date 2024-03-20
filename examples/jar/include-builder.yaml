@@ -2,4 +2,4 @@ projects:
   - jar:
       url: https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar
       path: libs/gson.jar
-      downloadPolicy: ALWAYS # ALWAYS, IF_NOT_PRESENT (default), NEVER
+      downloadPolicy: IF_NOT_PRESENT # ALWAYS, IF_NOT_PRESENT (default), NEVER
