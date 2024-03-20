@@ -28,18 +28,12 @@ def exec = { String command ->
     log("Execute: $command")
     def process = ["bash", "-c", "$command"].execute()
     process.consumeProcessOutput(System.out, System.err)
-    def result = process.waitFor()
-    if (result != 0) {
-        throw new RuntimeException("""
-                Execute failed with exit code $result
-                command: $command
-                """)
-    }
+    return process.waitFor()
 }
 
 def getCurrentBranch = { String dir = null ->
     try {
-        return "git ${dir ? "-C $dir " : ""}configuredBranch --show-current".execute().text.trim()
+        return "git ${dir ? "-C $dir" : ""} branch --show-current".execute().text.trim()
     } catch (ignored) {
         return NOT_GIT_REPOSITORY
     }
@@ -75,6 +69,12 @@ def cloneProject = { String gitUrl, String dir, String branch = null, String ext
     exec "git clone ${branch ? "-b $branch" : ""} ${extraArgs ?: ""} $gitUrl ${path}"
 }
 
+def build = { String path ->
+    def absolutePath = getAbsolutePath(path)
+    log("Include project: $absolutePath")
+    includeBuild(absolutePath)
+}
+
 def file = getIncludeBuilderYaml()
 if (!file?.isFile()) {
     log("include-builder.yaml is missing or not a file, skip")
@@ -84,7 +84,7 @@ if (!file?.isFile()) {
 // include-builder.yaml parser
 def ibYamlParser = new Yaml(new Constructor(Cfg.class, new LoaderOptions()))
 
-// configuredBranch mapping parser
+// branch mapping parser
 def bmYamlParser = new Yaml()
 
 def cfg = ibYamlParser.load(file.text) as Cfg
@@ -105,7 +105,7 @@ cfg.projects.each { project ->
         } else if (!targetFile.isDirectory()) {
             log("$dirPath is not a directory, skip")
         } else {
-            includeBuild(targetFile.getAbsolutePath())
+            build(targetFile.getAbsolutePath())
         }
         return
     }
@@ -120,16 +120,11 @@ cfg.projects.each { project ->
                     jarFile.exists() && jarFile.delete()
                     exec "curl -L --create-dirs -o ${jarFile.getAbsolutePath()} ${jarCfg.url}"
                 }
-                jarFile.exists() && includeBuild(jarFile.getParent())
                 break
             case DownloadPolicy.IF_NOT_PRESENT:
                 if (!jarFile.exists()) {
                     jarCfg.url && exec("curl -L --create-dirs -o ${jarFile.getAbsolutePath()} ${jarCfg.url}")
                 }
-                jarFile.exists() && includeBuild(jarFile.getParent())
-                break
-            case DownloadPolicy.NEVER:
-                jarFile.exists() && includeBuild(jarFile.getParent())
                 break
             default:
                 break
@@ -144,18 +139,13 @@ cfg.projects.each { project ->
         return
     }
 
-    def id = project.id ?: relativePath.split('/').last()
-    def configuredBranch = projectToCfg[id]?.branch ?: project.git?.branch
     def projectDir = new File(getAbsolutePath(relativePath))
-    def trySameBranch = ofNullable(project?.git?.trySameBranch).orElse(cfg.trySameBranch)
-
     if (projectDir.exists()) {
         if (!projectDir.isDirectory()) {
             log("$relativePath is not a directory, skip")
             return
         }
-        log("Include existing project: $relativePath")
-        includeBuild(getGitBuildPath(project))
+        build(getGitBuildPath(project))
         return
     }
 
@@ -165,23 +155,26 @@ cfg.projects.each { project ->
         return
     }
 
+    def id = project.id ?: relativePath.split('/').last()
+    def configuredBranch = projectToCfg[id]?.branch ?: project.git?.branch
+    def trySameBranch = ofNullable(project?.git?.trySameBranch).orElse(cfg.trySameBranch)
     def extraArgs = project.git?.extraArgs
+
+    def branchToUse
     if (configuredBranch) {
-        cloneProject(gitUrl, relativePath, configuredBranch, extraArgs)
+        branchToUse = configuredBranch
+    } else if (trySameBranch
+            && currentBranch != NOT_GIT_REPOSITORY
+            && exec("git ls-remote --heads --exit-code $gitUrl $currentBranch") == 0) {
+        branchToUse = currentBranch
     } else {
-        if (trySameBranch && currentBranch != NOT_GIT_REPOSITORY) {
-            try {
-                cloneProject(gitUrl, relativePath, currentBranch, extraArgs)
-            } catch (Exception ignored) {
-                cloneProject(gitUrl, relativePath, null, extraArgs)
-            }
-        } else {
-            cloneProject(gitUrl, relativePath, null, extraArgs)
-        }
+        branchToUse = null
     }
 
+    cloneProject(gitUrl, relativePath, branchToUse, extraArgs)
+
     if (projectDir.exists()) {
-        includeBuild(getGitBuildPath(project))
+        build(getGitBuildPath(project))
     }
 
 }

@@ -1,21 +1,9 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version "${springBootVersion}"
-    id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
-    id 'com.diffplug.spotless' version "${spotlessVersion}"
-    id "com.github.spotbugs" version "${spotbugsVersion}"
 }
 
 repositories {
     mavenCentral()
-    maven { url "https://repo.spring.io/snapshot" }
-    maven { url "https://repo.spring.io/milestone" }
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
-    }
 }
 
 dependencies {
