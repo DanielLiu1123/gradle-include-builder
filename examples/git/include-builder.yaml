@@ -6,4 +6,4 @@ projects:
       branch: 3.2.x
       path: third-party/httpexchange-spring-boot-starter
       buildPath: .
-      extraArgs: --depth 1 --single-branch
+      extraArgs: --depth 1 --single-branch --no-tags
