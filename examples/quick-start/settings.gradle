@@ -1,3 +1,0 @@
-rootProject.name = 'quick-start'
-
-apply from: "../../include-build.gradle"

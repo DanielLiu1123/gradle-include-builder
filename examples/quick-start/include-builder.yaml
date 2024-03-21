@@ -1,4 +1,0 @@
-trySameBranch: true
-projects:
-  - local:
-      dir: ../libs/lib-a
