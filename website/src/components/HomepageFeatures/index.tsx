@@ -10,17 +10,17 @@ type FeatureItem = {
 };
 
 const FeatureList: FeatureItem[] = [
-  {
-    title: 'Abandon private repository',
-    Svg: null,
-    description: (
-      <>
-        Java code distribution has long been carried out through public repositories such as Maven Central,
-        but when you have the source code, why do you still need to package it into a jar for distribution?
-        Drop your private repository and use gradle and Java source code for dependency management.
-      </>
-    ),
-  },
+  // {
+  //   title: 'Abandon private repository',
+  //   Svg: null,
+  //   description: (
+  //     <>
+  //       Java code distribution has long been carried out through public repositories such as Maven Central,
+  //       but when you have the source code, why do you still need to package it into a jar for distribution?
+  //       Drop your private repository and use gradle and Java source code for dependency management.
+  //     </>
+  //   ),
+  // },
   // {
   //   title: 'Code Generation',
   //   Svg: null,
