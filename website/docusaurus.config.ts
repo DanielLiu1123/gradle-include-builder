@@ -3,20 +3,20 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'HttpExchange Spring Boot Starter',
-  tagline: 'The best way to use @HttpExchange in Spring Boot',
+  title: 'Gradle Include Builder',
+  tagline: 'Build Gradle projects using source code dependencies',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
   url: 'https://danielliu1123.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/httpexchange-spring-boot-starter/',
+  baseUrl: '/gradle-include-builder/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'danielliu1123', // Usually your GitHub org/user name.
-  projectName: 'httpexchange-spring-boot-starter', // Usually your repo name.
+  projectName: 'gradle-include-builder', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -37,7 +37,7 @@ const config: Config = {
           sidebarPath: './sidebars.ts',
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl: 'https://github.com/DanielLiu1123/httpexchange-spring-boot-starter/tree/main/website',
+          editUrl: 'https://github.com/DanielLiu1123/gradle-include-builder/tree/main/website',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -57,34 +57,34 @@ const config: Config = {
           position: 'left',
           label: 'Docs',
         },
-        {
-          type: 'localeDropdown',
-          position: 'right',
-        },
-        {
-          type: 'docsVersionDropdown',
-          position: 'right',
-        },
+        // {
+        //   type: 'localeDropdown',
+        //   position: 'right',
+        // },
+        // {
+        //   type: 'docsVersionDropdown',
+        //   position: 'right',
+        // },
         // Copy from https://github.com/facebook/docusaurus/blob/main/website/docusaurus.config.ts
         {
-          href: 'https://github.com/danielliu1123/httpexchange-spring-boot-starter',
+          href: 'https://github.com/danielliu1123/gradle-include-builder',
           position: 'right',
           className: 'header-github-link',
           'aria-label': 'GitHub repository',
         },
       ],
     },
-    algolia: {
-      // The application ID provided by Algolia
-      appId: 'B5TXVPY7SP',
-      // Public API key: it is safe to commit it
-      apiKey: 'd1d0662c9bcd12936152178add34706d',
-      indexName: 'danielliu1123io',
-      // Optional: see doc section below
-      contextualSearch: true,
-      // Optional: path for search page that enabled by default (`false` to disable it)
-      searchPagePath: 'search',
-    },
+    // algolia: {
+    //   // The application ID provided by Algolia
+    //   appId: 'B5TXVPY7SP',
+    //   // Public API key: it is safe to commit it
+    //   apiKey: 'd1d0662c9bcd12936152178add34706d',
+    //   indexName: 'danielliu1123io',
+    //   // Optional: see doc section below
+    //   contextualSearch: true,
+    //   // Optional: path for search page that enabled by default (`false` to disable it)
+    //   searchPagePath: 'search',
+    // },
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,

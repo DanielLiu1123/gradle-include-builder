@@ -11,32 +11,34 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Eliminate Boilerplate Code',
+    title: 'Abandon private repository',
     Svg: null,
     description: (
       <>
-        Design for eliminating boilerplate code for <code>@HttpExchange</code> clients, providing Spring Cloud OpenFeign like experience.
+        Java code distribution has long been carried out through public repositories such as Maven Central,
+        but when you have the source code, why do you still need to package it into a jar for distribution?
+        Drop your private repository and use gradle and Java source code for dependency management.
       </>
     ),
   },
-  {
-    title: 'Code Generation',
-    Svg: null,
-    description: (
-      <>
-        Generate default server implementations from <code>@HttpExchange</code> interfaces, decoupling the server implementation from the API definition.
-      </>
-    ),
-  },
-  {
-    title: 'Designed for Extension',
-    Svg: null,
-    description: (
-      <>
-        This library is designed to be extended and customized to suit your needs.
-      </>
-    ),
-  },
+  // {
+  //   title: 'Code Generation',
+  //   Svg: null,
+  //   description: (
+  //     <>
+  //       Generate default server implementations from <code>@HttpExchange</code> interfaces, decoupling the server implementation from the API definition.
+  //     </>
+  //   ),
+  // },
+  // {
+  //   title: 'Designed for Extension',
+  //   Svg: null,
+  //   description: (
+  //     <>
+  //       This library is designed to be extended and customized to suit your needs.
+  //     </>
+  //   ),
+  // },
 ];
 
 function Feature({title, Svg, description}: FeatureItem) {
