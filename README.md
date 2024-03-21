@@ -71,8 +71,15 @@ and you can easily customize and extend the library functions.
   ```groovy
   // build.gradle
   dependencies {
+      // From https://github.com/DanielLiu1123/httpexchange-spring-boot-starter (git)
+      // Just like a normal dependency but without version
       implementation 'io.github.danielliu1123:httpexchange-spring-boot-starter'
+  
+      // From ../another-gradle-project (dir)
       implementation 'com.example:another-gradle-project'
+  
+      // From https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar (jar)
+      // Use jar file as dependency
       implementation files('libs/gson.jar')
   }
   ```
