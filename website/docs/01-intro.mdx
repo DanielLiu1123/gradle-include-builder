@@ -1,12 +1,71 @@
 ---
-sidebar_position: 10
+sidebar_position: 1
 ---
 
 
 # Introduction
 
-Gradle Include Builder is a gradle build script that aims to use source code of the dependencies to build project,
+Gradle Include Builder is a script that aims to use source code of the dependencies to build gradle project,
 keep the code always updated, and make customization and extension easier.
 
-## Quick Start
+## Challenges of Jar Dependencies
 
+- Setting up and maintaining a private repository
+
+    This is time-consuming and requires extra costs and expertise.
+    Managing the stability and security of a private repository adds complexity to the project,
+    and any disruption can affect dependency management and the build process.
+
+- Updates are not timely
+
+    Relying on jar files means waiting for the library author to release a new version.
+    This can cause unnecessary delays for urgent bug fixes or security updates.
+
+- Difficult to debug and troubleshoot
+
+    Without the source code, it becomes harder to understand and debug issues in the dependency library.
+    Even with source code, you cannot make direct modifications in the project,
+    limiting your ability to quickly resolve issues.
+
+- Inconvenient to customize and extend
+
+    When you need to customize or extend library functions, starting from the source
+    code to compile and manage your own version is troublesome and prone to errors.
+    Merging these changes with library updates is even more challenging.
+
+In enterprise projects, we often divide our code into several independently functional modules.
+Relying on traditional jar dependencies makes it extremely difficult to ensure these modules' code is always up-to-date.
+Once a dependent module encounters an issue, quick fixes become even more challenging since directly modifying
+the source code of dependencies is very difficult.
+
+## Source Code Dependencies
+
+Imagine a scenario where our dependencies are directly on source code, not jar files.
+What significant advantages could we gain?
+
+- Enhanced Extensibility and Customization
+
+    Direct access to the source code provides unparalleled flexibility for the project,
+    making it straightforward to extend functionalities and customize features.
+
+- Rapid Issue Resolution
+
+    Being able to immediately access and modify the source code greatly reduces the time for diagnosing and solving problems.
+
+- Instant Updates
+
+    Relying on source code means any modifications or updates to the libraries can be reflected in the project instantly,
+    ensuring the project is always up-to-date.
+
+## Limitations
+
+The primary challenge of using source code dependencies is the increased build time,
+as dependencies are based on .java files instead of .class files,
+meaning the source code of the dependencies must be compiled.
+Therefore, it may not be a good choice to use source code dependencies for large projects like [Spring](https://github.com/spring-projects/spring-framework),
+as their build and compilation time could significantly increase.
+
+However, if your team is utilizing Gradle and managing multiple modules or repositories,
+considering a source code dependency approach is advisable.
+This method can significantly enhance the efficiency of code iterations,
+especially during development and testing phases, allowing immediate visibility of changes.

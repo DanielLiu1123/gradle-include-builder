@@ -3,35 +3,13 @@
 [![Build](https://img.shields.io/github/actions/workflow/status/DanielLiu1123/gradle-include-builder/build.yml?branch=main)](https://github.com/DanielLiu1123/gradle-include-builder/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+Gradle Include Builder is a script that aims to use source code of the dependencies to build gradle project,
+keep the code always updated, and make customization and extension easier.
+
 Are you still:
 
 - Maintaining a private repository to share your Java libraries?
 - Waiting for a dependency to release a new version to fix your issue?
-
-Problems with using Jar files as dependencies:
-
-- Setting up and maintaining a private repository
-
-  This is time-consuming and requires extra costs and expertise. Managing
-  the stability and security of a private repository adds complexity to the project, and any disruption can affect
-  dependency management and the build process.
-
-- Updates are not timely
-
-  Relying on jar files means waiting for the library author to release a new version. This can
-  cause unnecessary delays for urgent bug fixes or security updates.
-
-- Difficult to debug and troubleshoot
-
-  Without the source code, it becomes harder to understand and debug issues in the
-  dependency library. Even with source code, you cannot make direct modifications in the project, limiting your ability
-  to quickly resolve issues.
-
-- Inconvenient to customize and extend
-
-  When you need to customize or extend library functions, starting from the source
-  code to compile and manage your own version is troublesome and prone to errors. Merging these changes with library
-  updates is even more challenging.
 
 Why not use Java source code as dependencies?
 

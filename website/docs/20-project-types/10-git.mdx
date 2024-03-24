@@ -1,0 +1,24 @@
+---
+sidebar_position: 10
+---
+
+
+# Git Repository
+
+This section describes how to use a **Git repository** as a dependency.
+
+## Configuration
+
+```yaml title="include-builder.yaml"
+projects:
+  - id: httpexchange-spring-boot-starter
+    git:
+      url: https://github.com/DanielLiu1123/httpexchange-spring-boot-starter
+      branch: main
+      path: third-party/httpexchange-spring-boot-starter
+```
+
+
+
+Code is available in the [git example](https://github.com/DanielLiu1123/gradle-include-builder/tree/main/examples/git)
+
