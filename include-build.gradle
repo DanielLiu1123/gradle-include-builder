@@ -87,8 +87,8 @@ def getMapping = { ProjectMappings projectMappings, String id ->
 }
 
 def file = getIncludeBuilderYaml()
-if (!file?.isFile()) {
-    log("include-builder.yaml is missing or not a file, skip")
+if (!file?.exists()) {
+    log("include-builder.yaml is missing, skip")
     return
 }
 
