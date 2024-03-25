@@ -7,7 +7,9 @@ sidebar_position: 10
 
 This section describes how to use a **Git repository** as a dependency.
 
-## Configuration
+## Basic
+
+If the `path` directory does not exist, the remote repository will be cloned to the specified directory.
 
 ```yaml title="include-builder.yaml"
 projects:
@@ -18,7 +20,68 @@ projects:
       path: third-party/httpexchange-spring-boot-starter
 ```
 
+## Use the Same Branch
+
+It is possible to configure the git repository
+to try to use the same branch and use the default branch if the branch does not exist.
+
+```yaml title="include-builder.yaml"
+trySameBranch: true # default is false
+projects:
+  - id: httpexchange-spring-boot-starter
+    git:
+      url: https://github.com/DanielLiu1123/httpexchange-spring-boot-starter
+      branch: main
+      path: third-party/httpexchange-spring-boot-starter
+      trySameBranch: true # override the global configuration
+  - id: grpc-starter
+    git:
+      url: https://github.com/DanielLiu1123/grpc-starter
+      branch: main
+      path: third-party/grpc-starter
+      trySameBranch: false
+```
+
+## Branch Mapping
+
+If you currently work on branch `feat-x`, and want this branch to depend on the specified branch of git repository,
+you can use `branchMappingDir` configuration.
+
+```yaml title="include-builder.yaml"
+branchMappingDir: .branch-mappings # default is .branch-mappings
+projects:
+  - id: httpexchange-spring-boot-starter
+    git:
+      url: https://github.com/DanielLiu1123/httpexchange-spring-boot-starter
+      branch: main
+      path: third-party/httpexchange-spring-boot-starter
+  - id: grpc-starter
+    git:
+      url: https://github.com/DanielLiu1123/grpc-starter
+      path: third-party/grpc-starter
+```
+
+Now, you can create file `feat-x.yaml` (`<branch>.yaml`) in the `.branch-mappings` directory to map the current branch to the specified branch.
+
+```yaml title=".branch-mappings/feat-x.yaml"
+mappings:
+  - id: httpexchange-spring-boot-starter
+    branch: 3.2.x # This will override '.projects[].git.branch' configuration in the include-builder.yaml
+  - id: grpc-starter
+    branch: main
+```
+
+## Build Path
+
+The build path may not always be the root dir and can be specified via the `buildPath` configuration.
+
+```yaml title="include-builder.yaml"
+trySameBranch: true # default is false
+projects:
+  - git:
+      url: https://github.com/xxx/multi-module-project
+      buildPath: ./java-module # default is root dir (.)
+```
 
 
-Code is available in the [git example](https://github.com/DanielLiu1123/gradle-include-builder/tree/main/examples/git)
-
+See [git example](https://github.com/DanielLiu1123/gradle-include-builder/tree/main/examples/git).
