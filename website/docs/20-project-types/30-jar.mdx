@@ -7,4 +7,24 @@ sidebar_position: 30
 
 This section describes how to use a **Jar file** as a dependency.
 
+## Basic
+
+```yaml title="include-builder.yaml"
+projects:
+  - jar:
+      url: https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar
+      path: libs/gson.jar
+      downloadPolicy: IF_NOT_PRESENT
+```
+
+`.properties[].jar.downloadPolicy` has three options:
+
+- `ALWAYS`: Always download the jar file.
+- `IF_NOT_PRESENT`: Download the jar file only if it does not exist, this is the default value.
+- `NEVER`: Never download the jar file.
+
+:::note
+`downloadPolicy` is case-sensitive.
+:::
+
 See [jar example](https://github.com/DanielLiu1123/gradle-include-builder/tree/main/examples/jar).

@@ -76,12 +76,22 @@ mappings:
 The build path may not always be the root dir and can be specified via the `buildPath` configuration.
 
 ```yaml title="include-builder.yaml"
-trySameBranch: true # default is false
 projects:
   - git:
       url: https://github.com/xxx/multi-module-project
       buildPath: ./java-module # default is root dir (.)
 ```
 
+## Extra Args
+
+You can pass extra arguments to the `git clone` command.
+
+```yaml title="include-builder.yaml"
+projects:
+  - git:
+      url: https://github.com/DanielLiu1123/httpexchange-spring-boot-starter
+      path: third-party/httpexchange-spring-boot-starter
+      extraArgs: --depth 1 --single-branch --no-tags
+```
 
 See [git example](https://github.com/DanielLiu1123/gradle-include-builder/tree/main/examples/git).

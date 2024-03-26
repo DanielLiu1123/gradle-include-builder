@@ -9,6 +9,11 @@ This section describes how to use a **directory** as a dependency.
 
 ## Basic
 
-
+```yaml title="include-builder.yaml"
+projects:
+  - dir:
+      path: ../dir # path to the directory, can be relative or absolute path
+      buildPath: . # build path, default is '.', means the same directory as the '.projects[].dir.path'
+```
 
 See [dir example](https://github.com/DanielLiu1123/gradle-include-builder/tree/main/examples/dir).
