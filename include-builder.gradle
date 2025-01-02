@@ -32,6 +32,7 @@ class Config {
         static class Git {
             String url
             String branch
+            String tag
         }
     }
 }
@@ -53,7 +54,7 @@ config.dependencies = configObj.dependencies?.collect { dep ->
     if (!dep.path) throw new IllegalArgumentException("path is required for dependency: ${dep}")
     if (dep.git && !dep.git.url) throw new IllegalArgumentException("url is required for dependency: ${dep}")
     d.path = dep.path
-    d.git = dep.git ? new Config.Dependency.Git(url: dep.git.url, branch: dep.git.branch) : null
+    d.git = dep.git ? new Config.Dependency.Git(url: dep.git.url, branch: dep.git.branch, tag: dep.git.tag) : null
     return d
 } ?: []
 
@@ -71,21 +72,25 @@ for (def dep : config.dependencies) {
             // Delete all modifications in the CI environment and pull the latest code
             execWithOutput("git rebase --abort", path)
             execWithOutput("git reset --hard HEAD", path)
-            execWithOutput("git fetch", path)
+            execWithOutput("git fetch -pPt", path)
 
-            // Use main branch by default
-            execWithOutput("git checkout main", path)
-            // Try the same branch
-            execWithOutput("git checkout ${rootProjectBranch}", path)
-            // Try specified branch
-            if (dep.git.branch) {
-                if (execWithExitCode("git checkout ${dep.git.branch}", path) != 0) {
-                    throw new GradleException("Branch '${dep.git.branch}' not found in ${path}")
+            if (dep.git.tag) {
+                execWithOutput("git checkout ${dep.git.tag}", path)
+            } else {
+                // Use main branch by default
+                execWithOutput("git checkout main", path)
+                // Try the same branch
+                execWithOutput("git checkout ${rootProjectBranch}", path)
+                // Try specified branch
+                if (dep.git.branch) {
+                    if (execWithExitCode("git checkout ${dep.git.branch}", path) != 0) {
+                        throw new GradleException("Branch '${dep.git.branch}' not found in ${path}")
+                    }
                 }
-            }
 
-            // reset to the latest remote, there may be a force push
-            execWithOutput("git reset --hard origin/${execWithOutput('git branch --show-current', path)}", path)
+                // reset to the latest remote, there may be a force push
+                execWithOutput("git reset --hard origin/${execWithOutput('git branch --show-current', path)}", path)
+            }
         } else {
             // Not a CI environment (local), do nothing
         }
