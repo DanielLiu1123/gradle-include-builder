@@ -1,3 +1,3 @@
 rootProject.name = 'git'
 
-apply from: "../../include-build.gradle"
+apply from: "../../include-builder.gradle"

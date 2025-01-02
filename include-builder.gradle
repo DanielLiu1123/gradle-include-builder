@@ -1,0 +1,106 @@
+import groovy.json.JsonSlurper
+
+import java.nio.file.Paths
+
+def log = { String message ->
+    println("[Include Builder] $message (${rootProject.name})")
+}
+
+def execWithOutput = { String command, String dir ->
+    def process = command.execute([], new File(dir))
+    process.waitFor()
+    return process.text.trim()
+}
+
+def execWithExitCode = { String command, String dir ->
+    def process = command.execute([], new File(dir))
+    process.waitFor()
+    return process.exitValue()
+}
+
+def getPath = { String dir ->
+    return dir.startsWith('/') ? dir : Paths.get(rootDir.getAbsolutePath(), dir).normalize().toString()
+}
+
+class Config {
+    List<Dependency> dependencies
+
+    static class Dependency {
+        String path
+        Git git
+
+        static class Git {
+            String url
+            String branch
+        }
+    }
+}
+
+// Main
+
+def configFile = new File(rootDir, 'include-builder.json')
+if (!configFile.exists()) {
+    log("include-builder.json not found, skipping")
+    return
+}
+
+def configObj = new JsonSlurper().parse(configFile) // LazyMap
+
+// read include-builder.yaml
+def config = new Config()
+config.dependencies = configObj.dependencies?.collect { dep ->
+    def d = new Config.Dependency()
+    if (!dep.path) throw new IllegalArgumentException("path is required for dependency: ${dep}")
+    if (dep.git && !dep.git.url) throw new IllegalArgumentException("url is required for dependency: ${dep}")
+    d.path = dep.path
+    d.git = dep.git ? new Config.Dependency.Git(url: dep.git.url, branch: dep.git.branch) : null
+    return d
+} ?: []
+
+def rootProjectBranch = execWithOutput("git branch --show-current", rootDir.getAbsolutePath())
+
+def isCI = System.getenv("CI") == "true" || System.getenv("CI") == "1"
+
+for (def dep : config.dependencies) {
+    if (!dep.git) continue
+
+    def path = getPath(dep.path)
+
+    if (new File(path).exists()) {
+        if (isCI) {
+            // Delete all modifications in the CI environment and pull the latest code
+            execWithOutput("git rebase --abort", path)
+            execWithOutput("git reset --hard HEAD", path)
+            execWithOutput("git fetch", path)
+
+            // Use main branch by default
+            execWithOutput("git checkout main", path)
+            // Try the same branch
+            execWithOutput("git checkout ${rootProjectBranch}", path)
+            // Try specified branch
+            if (dep.git.branch) {
+                if (execWithExitCode("git checkout ${dep.git.branch}", path) != 0) {
+                    throw new GradleException("Branch '${dep.git.branch}' not found in ${path}")
+                }
+            }
+
+            // reset to the latest remote, there may be a force push
+            execWithOutput("git reset --hard origin/${execWithOutput('git branch --show-current', path)}", path)
+        } else {
+            // Not a CI environment (local), do nothing
+        }
+    } else {
+        Paths.get(path).getParent().toFile().mkdirs()
+        execWithOutput("git clone ${dep.git.branch ? "-b ${dep.git.branch}" : ""} ${dep.git.url} ${path}", "/")
+    }
+}
+
+if (!config.dependencies.isEmpty()) {
+    def dependencies = config.dependencies.collect { dep -> dep.path }
+    log("Dependencies: ${dependencies}")
+    for (def dep : config.dependencies) {
+        def path = getPath(dep.path)
+        log("Dependency: ${dep.path}, Branch: ${execWithOutput('git branch --show-current', path)}")
+        includeBuild(path)
+    }
+}

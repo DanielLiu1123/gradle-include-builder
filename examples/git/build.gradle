@@ -1,5 +1,6 @@
 plugins {
-    id 'java-library'
+    id 'java'
+    id 'org.springframework.boot' version "${springBootVersion}"
     id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
 }
 
@@ -7,14 +8,8 @@ repositories {
     mavenCentral()
 }
 
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
-    }
-}
-
 dependencies {
-    api("io.github.danielliu1123:httpexchange-spring-boot-starter")
+    implementation("io.github.danielliu1123:httpexchange-spring-boot-starter")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
