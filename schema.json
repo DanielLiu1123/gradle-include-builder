@@ -41,7 +41,7 @@
             },
             "branch": {
               "type": "string",
-              "description": "Optional, the branch to checkout, only one of branch or tag can be specified."
+              "description": "Optional, the branch to checkout, only one of branch or tag can be specified.\nIf in CI environment (env CI is 1 or true), it will try to use following branches in order: specified branch, same branch as root project, main"
             },
             "tag": {
               "type": "string",
