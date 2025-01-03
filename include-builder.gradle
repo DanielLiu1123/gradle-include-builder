@@ -47,7 +47,7 @@ if (!configFile.exists()) {
 
 def configObj = new JsonSlurper().parse(configFile) // LazyMap
 
-// read include-builder.yaml
+// read include-builder.json
 def config = new Config()
 config.dependencies = configObj.dependencies?.collect { dep ->
     def d = new Config.Dependency()
