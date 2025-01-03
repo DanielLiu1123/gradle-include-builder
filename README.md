@@ -47,7 +47,6 @@ and you can easily customize and extend the library functions.
   ```groovy
   // build.gradle
   dependencies {
-      // From https://github.com/DanielLiu1123/httpexchange-spring-boot-starter (git)
       // Just like a normal dependency but without version
       implementation 'io.github.danielliu1123:httpexchange-spring-boot-starter'
   }
