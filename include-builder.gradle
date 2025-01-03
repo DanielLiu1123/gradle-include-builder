@@ -53,6 +53,7 @@ config.dependencies = configObj.dependencies?.collect { dep ->
     def d = new Config.Dependency()
     if (!dep.path) throw new IllegalArgumentException("path is required for dependency: ${dep}")
     if (dep.git && !dep.git.url) throw new IllegalArgumentException("url is required for dependency: ${dep}")
+    if (dep.git && dep.git.branch && dep.git.tag) throw new IllegalArgumentException("branch and tag cannot be specified at the same time for dependency: ${dep}")
     d.path = dep.path
     d.git = dep.git ? new Config.Dependency.Git(url: dep.git.url, branch: dep.git.branch, tag: dep.git.tag) : null
     return d
