@@ -10,7 +10,8 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Config/$defs/Dependency"
-          }
+          },
+          "description": "Optional, the dependencies to include."
         }
       },
       "required": [],
@@ -20,11 +21,11 @@
           "properties": {
             "path": {
               "type": "string",
-              "description": "The path to the project to include"
+              "description": "Required, the path to the project to include, can be relative or absolute."
             },
             "git": {
               "$ref": "#/$defs/Config/$defs/Git",
-              "description": "If path is not exist, will use git to clone the project to the specified path."
+              "description": "Optional, if path is not exist, will use git to clone the project to the specified path."
             }
           },
           "required": [
@@ -36,15 +37,15 @@
           "properties": {
             "url": {
               "type": "string",
-              "description": "required, the git repository url"
+              "description": "Required, the git repository url."
             },
             "branch": {
               "type": "string",
-              "description": "optional, the branch to checkout"
+              "description": "Optional, the branch to checkout, only one of branch or tag can be specified."
             },
             "tag": {
               "type": "string",
-              "description": "optional, the tag to checkout"
+              "description": "Optional, the tag to checkout, only one of branch or tag can be specified."
             }
           },
           "required": [
