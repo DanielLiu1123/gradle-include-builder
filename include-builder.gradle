@@ -124,12 +124,14 @@ if (!config.dependencies.isEmpty()) {
     for (def dep : config.dependencies) {
         def path = getPath(dep.path)
 
-        if (dep.git?.tag) {
-            log("Dependency: ${dep.path}, Tag: ${dep.git.tag}")
-        } else if (dep.git?.branch) {
-            log("Dependency: ${dep.path}, Branch: ${dep.git.branch}")
+        if (dep.git) {
+            if (dep.git.tag) {
+                log("Dependency: ${dep.path}, Tag: ${execWithOutput('git describe --tags', path)}")
+            } else {
+                log("Dependency: ${dep.path}, Branch: ${execWithOutput('git branch --show-current', path)}")
+            }
         } else {
-            log("Dependency: ${dep.path}, Branch: ${execWithOutput('git branch --show-current', path)}")
+            log("Dependency: ${dep.path}")
         }
 
         includeBuild(path)
