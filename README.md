@@ -19,17 +19,16 @@ and you can easily customize and extend the library functions.
 
 ## Quick Start
 
-- Apply script
+- Apply script 
 
   ```groovy
   // settings.gradle
   apply from: 'https://raw.githubusercontent.com/DanielLiu1123/gradle-include-builder/main/include-builder.gradle'
   ```
 
-- Define dependencies
+- Define dependencies in `include-builder.json`
 
     ```json
-    /* include-builder.json */
     {
       "dependencies": [
         {
