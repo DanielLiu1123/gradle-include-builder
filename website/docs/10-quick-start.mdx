@@ -5,26 +5,32 @@ sidebar_position: 10
 
 # Quick Start
 
-1. Apply the script
+1. Apply the script in the `settings.gradle`
 
     ```groovy title="settings.gradle"
-    apply from: 'https://raw.githubusercontent.com/DanielLiu1123/gradle-include-builder/main/include-build.gradle'
+    apply from: "https://raw.githubusercontent.com/DanielLiu1123/gradle-include-builder/refs/heads/main/include-builder.gradle"
     ```
 
-2. Add dependencies
+2. Add dependencies in the `include-builder.json`
 
-    ```yaml title="include-builder.yaml"
-    projects:
-      - id: httpexchange-spring-boot-starter
-        git:
-          url: https://github.com/DanielLiu1123/httpexchange-spring-boot-starter
-          branch: main
-          path: third-party/httpexchange-spring-boot-starter
+    ```yaml title="include-builder.json"
+    {
+      "dependencies": [
+        {
+          "path": "third-party/httpexchange-spring-boot-starter",
+          "git": {
+            "url": "https://github.com/DanielLiu1123/httpexchange-spring-boot-starter",
+            "branch": "main"
+          }
+        }
+      ]
+    }
     ```
 
 3. Use the included project
 
     ```groovy title="build.gradle"
+    // <group>:<artifact> format, do NOT specify the version
     implementation 'io.github.danielliu1123:httpexchange-spring-boot-starter'
     ```
 

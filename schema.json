@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/DanielLiu1123/gradle-include-builder/blob/main/include-builder.gradle",
+  "$ref": "#/$defs/Config",
+  "$defs": {
+    "Config": {
+      "type": "object",
+      "properties": {
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Config/$defs/Dependency"
+          }
+        }
+      },
+      "required": [],
+      "$defs": {
+        "Dependency": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "The path to the project to include"
+            },
+            "git": {
+              "$ref": "#/$defs/Config/$defs/Git",
+              "description": "If path is not exist, will use git to clone the project to the specified path."
+            }
+          },
+          "required": [
+            "path"
+          ]
+        },
+        "Git": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "required, the git repository url"
+            },
+            "branch": {
+              "type": "string",
+              "description": "optional, the branch to checkout"
+            },
+            "tag": {
+              "type": "string",
+              "description": "optional, the tag to checkout"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "allOf": [
+            {
+              "not": {
+                "required": [
+                  "branch",
+                  "tag"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

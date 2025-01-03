@@ -4,25 +4,29 @@ sidebar_position: 50
 
 # Configuration Options
 
-This is all the configuration options that can be used in the `include-builder.yaml` file.
+This is all the configuration options that can be used in the `include-builder.json` file.
 
-```yaml title="include-builder.yaml"
-branchMappingDir: .branch-mappings  # Directory to store branch mappings, default is '.branch-mappings'
-trySameBranch: true                 # Whether to try to use the same branch as the project, default is false (global setting)
-projects:
-  - id: httpexchange-spring-boot-starter                                     # Optional
-    git:                                                                     # Mark this project is a git repository, only one of git, dir, jar can be used
-      url: https://github.com/DanielLiu1123/httpexchange-spring-boot-starter # Git repository URL
-      branch: main                                                           # Branch to use
-      path: third-party/httpexchange-spring-boot-starter                     # Download path, can be absolute path or relative to the root project
-      buildPath: .                                                           # Build path, default is '.', which means the root of the project
-      extraArgs: --depth 1 --single-branch                                   # Optional, used for git clone if the path does not exist
-      trySameBranch: true                                                    # Whether to try to use the same branch as the project, use the global setting if not set
-  - dir:                              # Mark this project is a directory, only one of git, dir, jar can be used
-      path: ../another-gradle-project # Directory path, can be absolute path or relative to the root project
-      buildPath: .                    # Build path, default is '.', which means the root of the project
-  - jar:                                                                                        # Mark this project is a jar file, only one of git, dir, jar can be used
-      url: https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar      # Download file URL
-      path: libs/gson.jar                                                                       # Download file path, can be absolute path or relative to the root project
-      downloadPolicy: IF_NOT_PRESENT                                                            # ALWAYS, IF_NOT_PRESENT (default), NEVER
+```yaml title="include-builder.json"
+{
+  "dependencies": [
+    {
+      "path": "third-party/httpexchange-spring-boot-starter",
+      "git": {
+        "url": "https://github.com/DanielLiu1123/httpexchange-spring-boot-starter",
+        "branch": "main"
+      }
+    },
+    {
+      "path": "third-party/grpc-starter",
+      "git": {
+        "url": "https://github.com/DanielLiu1123/grpc-starter",
+        "branch": "main"
+      }
+    }
+  ]
+}
 ```
+
+## JSON Schema
+
+JSON schema is available at [schema.json](https://github.com/DanielLiu1123/gradle-include-builder/blob/main/schema.json).

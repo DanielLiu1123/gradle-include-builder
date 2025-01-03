@@ -23,16 +23,16 @@ def getPath = { String dir ->
 }
 
 class Config {
-    List<Dependency> dependencies
+    List<Dependency> dependencies // optional
 
     static class Dependency {
-        String path
-        Git git
+        String path // required
+        Git git // optional
 
         static class Git {
-            String url
-            String branch
-            String tag
+            String url // required
+            String branch // optional, one of branch or tag
+            String tag // optional, one of branch or tag
         }
     }
 }

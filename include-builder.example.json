@@ -6,6 +6,13 @@
         "url": "https://github.com/DanielLiu1123/httpexchange-spring-boot-starter",
         "branch": "main"
       }
+    },
+    {
+      "path": "third-party/grpc-starter",
+      "git": {
+        "url": "https://github.com/DanielLiu1123/grpc-starter",
+        "branch": "main"
+      }
     }
   ]
 }
