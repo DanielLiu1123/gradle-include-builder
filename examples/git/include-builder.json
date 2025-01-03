@@ -3,7 +3,8 @@
     {
       "path": "third-party/httpexchange-spring-boot-starter",
       "git": {
-        "url": "https://github.com/DanielLiu1123/httpexchange-spring-boot-starter"
+        "url": "https://github.com/DanielLiu1123/httpexchange-spring-boot-starter",
+        "branch": "main"
       }
     }
   ]
