@@ -96,7 +96,13 @@ for (def dep : config.dependencies) {
         }
     } else {
         Paths.get(path).getParent().toFile().mkdirs()
-        execWithOutput("git clone ${dep.git.branch ? "-b ${dep.git.branch}" : ""} ${dep.git.url} ${path}", "/")
+
+        def cmd = "git clone %s %s %s".formatted(dep.git.branch ? "-b ${dep.git.branch}" : "", dep.git.url, path)
+        def process = cmd.execute([], new File("/"))
+        process.waitForProcessOutput(System.out, System.err)
+        if (process.exitValue() != 0) {
+            throw new GradleException("Failed to clone ${dep.git.url} to ${path}")
+        }
     }
 }
 
