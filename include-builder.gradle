@@ -110,11 +110,7 @@ for (def dep : config.dependencies) {
     } else {
         Paths.get(path).getParent().toFile().mkdirs()
 
-        def process = "git clone ${dep.git.url} ${path}".execute([], new File("/"))
-        process.waitForProcessOutput(System.out, System.err)
-        if (process.exitValue() != 0) {
-            throw new GradleException("Failed to clone ${dep.git.url} to ${path}")
-        }
+        mustExec("git clone ${dep.git.url} ${path}", "/")
 
         try {
             checkout(path, dep.git)
