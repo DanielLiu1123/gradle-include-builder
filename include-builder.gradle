@@ -12,10 +12,14 @@ def execWithOutput = { String command, String dir ->
     return process.text.trim()
 }
 
-def execWithExitCode = { String command, String dir ->
+def mustExec = { String command, String dir ->
     def process = command.execute([], new File(dir))
-    process.waitFor()
-    return process.exitValue()
+    def output = new StringBuilder()
+    def error = new StringBuilder()
+    process.waitForProcessOutput(output, error)
+    if (process.exitValue() != 0) {
+        throw new GradleException("Failed to execute: ${command}, error:\n${error.toString()}")
+    }
 }
 
 def getPath = { String dir ->
@@ -60,28 +64,30 @@ config.dependencies = configObj.dependencies?.collect { dep ->
 } ?: []
 
 def rootProjectBranch = execWithOutput("git branch --show-current", rootDir.getAbsolutePath())
+if (!rootProjectBranch) {
+    log("Cannot determine the current branch, skipping checkout")
+    log("git status:\n${execWithOutput('git status', rootDir.getAbsolutePath())}")
+}
 
 def isCI = System.getenv("CI") == "true" || System.getenv("CI") == "1"
 
 def checkout = { String path, Config.Dependency.Git git ->
     if (git.tag) {
-        if (execWithExitCode("git checkout ${git.tag}", path) != 0) {
-            throw new GradleException("Tag '${git.tag}' not found in ${path}")
-        }
+        mustExec("git checkout ${git.tag}", path)
     } else {
         // Use main branch by default
         execWithOutput("git checkout main", path)
         // Try the same branch
-        execWithOutput("git checkout ${rootProjectBranch}", path)
+        if (rootProjectBranch) {
+            execWithOutput("git checkout ${rootProjectBranch}", path)
+        }
         // Try specified branch
         if (git.branch) {
-            if (execWithExitCode("git checkout ${git.branch}", path) != 0) {
-                throw new GradleException("Branch '${git.branch}' not found in ${path}")
-            }
+            mustExec("git checkout ${git.branch}", path)
         }
 
         // reset to the latest remote, there may be a force push
-        execWithOutput("git reset --hard origin/${execWithOutput('git branch --show-current', path)}", path)
+        mustExec("git reset --hard origin/${execWithOutput('git branch --show-current', path)}", path)
     }
 }
 
@@ -127,7 +133,7 @@ if (!config.dependencies.isEmpty()) {
 
         if (dep.git) {
             if (dep.git.tag) {
-                log("Dependency: ${dep.path}, Tag: ${execWithOutput('git describe --tags', path)}")
+                log("Dependency: ${dep.path}, Tag: ${dep.git.tag}")
             } else {
                 log("Dependency: ${dep.path}, Branch: ${execWithOutput('git branch --show-current', path)}")
             }
