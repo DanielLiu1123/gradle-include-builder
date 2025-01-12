@@ -72,11 +72,12 @@ if (!rootProjectBranch) {
 def isCI = System.getenv("CI") == "true" || System.getenv("CI") == "1"
 
 def checkout = { String path, Config.Dependency.Git git ->
+    // Use main branch by default
+    execWithOutput("git checkout main", path)
+
     if (git.tag) {
         mustExec("git checkout ${git.tag}", path)
     } else {
-        // Use main branch by default
-        execWithOutput("git checkout main", path)
         // Try the same branch
         if (rootProjectBranch) {
             execWithOutput("git checkout ${rootProjectBranch}", path)
