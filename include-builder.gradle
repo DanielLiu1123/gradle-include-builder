@@ -72,9 +72,6 @@ if (!rootProjectBranch) {
 def isCI = System.getenv("CI") == "true" || System.getenv("CI") == "1"
 
 def checkout = { String path, Config.Dependency.Git git ->
-    // Use main branch by default
-    execWithOutput("git checkout main", path)
-
     if (git.tag) {
         mustExec("git checkout ${git.tag}", path)
     } else {
@@ -103,6 +100,9 @@ for (def dep : config.dependencies) {
             execWithOutput("git rebase --abort", path)
             execWithOutput("git reset --hard HEAD", path)
             execWithOutput("git fetch -pPt", path)
+
+            // Use main branch by default
+            execWithOutput("git checkout main", path)
 
             println "Deleting local branches that do not exist in the remote:"
             def cmd = "git for-each-ref refs/heads/ --format='%(refname:short)' | xargs -I {} sh -c 'git show-ref --verify --quiet refs/remotes/origin/{} || git branch -D {}'"
