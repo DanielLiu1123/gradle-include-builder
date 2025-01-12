@@ -103,6 +103,11 @@ for (def dep : config.dependencies) {
             execWithOutput("git reset --hard HEAD", path)
             execWithOutput("git fetch -pPt", path)
 
+            println "Deleting local branches that do not exist in the remote:"
+            def cmd = "git for-each-ref refs/heads/ --format='%(refname:short)' | xargs -I {} sh -c 'git show-ref --verify --quiet refs/remotes/origin/{} || git branch -D {}'"
+            def p = ["bash", "-c", cmd].execute([], new File(path))
+            p.waitForProcessOutput(System.out, System.err)
+
             checkout(path, dep.git)
         } else {
             // Not a CI environment (local), do nothing
