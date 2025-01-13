@@ -12,6 +12,10 @@
             "$ref": "#/$defs/Config/$defs/Dependency"
           },
           "description": "Optional, the dependencies to include."
+        },
+        "ciDir": {
+          "type": "string",
+          "description": "Optional, dir to store the dependencies. This is useful when you want to use build cache in CI environment. Default to \".deps\"."
         }
       },
       "required": [],

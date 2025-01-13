@@ -22,11 +22,8 @@ def mustExec = { String command, String dir ->
     }
 }
 
-def getPath = { String dir ->
-    return dir.startsWith('/') ? dir : Paths.get(rootDir.getAbsolutePath(), dir).normalize().toString()
-}
-
 class Config {
+    String ciDir // optional, default to .deps, all dependencies will be cloned to this directory
     List<Dependency> dependencies // optional
 
     static class Dependency {
@@ -53,6 +50,7 @@ def configObj = new JsonSlurper().parse(configFile) // LazyMap
 
 // read include-builder.json
 def config = new Config()
+config.ciDir = configObj.ciDir ?: ".deps"
 config.dependencies = configObj.dependencies?.collect { dep ->
     def d = new Config.Dependency()
     if (!dep.path) throw new IllegalArgumentException("path is required for dependency: ${dep}")
@@ -70,6 +68,15 @@ if (!rootProjectBranch) {
 }
 
 def isCI = System.getenv("CI") == "true" || System.getenv("CI") == "1"
+
+def getPath = { String dir ->
+    if (isCI) {
+        def basePath = !config.ciDir.startsWith('/') ? Paths.get(rootDir.getAbsolutePath(), config.ciDir).normalize().toString() : config.ciDir
+        return Paths.get(basePath, dir.substring(dir.lastIndexOf('/') + 1)).normalize().toString()
+    } else {
+        return !dir.startsWith('/') ? Paths.get(rootDir.getAbsolutePath(), dir).normalize().toString() : dir
+    }
+}
 
 def checkout = { String path, Config.Dependency.Git git ->
     if (git.tag) {
@@ -104,7 +111,7 @@ for (def dep : config.dependencies) {
             // Use main branch by default
             execWithOutput("git checkout main", path)
 
-            println "Deleting local branches that do not exist in the remote:"
+            println "[Include Builder] Deleting local branches that do not exist in the remote:"
             def cmd = "git for-each-ref refs/heads/ --format='%(refname:short)' | xargs -I {} sh -c 'git show-ref --verify --quiet refs/remotes/origin/{} || git branch -D {}'"
             def p = ["bash", "-c", cmd].execute([], new File(path))
             p.waitForProcessOutput(System.out, System.err)
@@ -128,19 +135,17 @@ for (def dep : config.dependencies) {
 }
 
 if (!config.dependencies.isEmpty()) {
-    def dependencies = config.dependencies.collect { dep -> dep.path }
-    log("Dependencies: ${dependencies}")
     for (def dep : config.dependencies) {
         def path = getPath(dep.path)
 
         if (dep.git) {
             if (dep.git.tag) {
-                log("Dependency: ${dep.path}, Tag: ${dep.git.tag}")
+                log("Dependency: ${path}, Tag: ${dep.git.tag}")
             } else {
-                log("Dependency: ${dep.path}, Branch: ${execWithOutput('git branch --show-current', path)}")
+                log("Dependency: ${path}, Branch: ${execWithOutput('git branch --show-current', path)}")
             }
         } else {
-            log("Dependency: ${dep.path}")
+            log("Dependency: ${path}")
         }
 
         includeBuild(path)
